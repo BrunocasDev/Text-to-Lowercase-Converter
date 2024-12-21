@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de texto para minúsculas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .box {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .textarea-wrapper {
+            width: 100%;
+            height: 200px;
+            position: relative;
+        }
+
+        textarea,
+        .output {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            background-color: #e7f0fa;
+            color: #333;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .output {
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .options {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-10px);
+            animation: fadeInOut 3s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            10%,
+            90% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Conversor de texto para minúsculas</h1>
+    <div class="options">
+        <label>
+            <input type="checkbox" id="capitalizeOption" onclick="converterTexto()">
+            Primeira letra maiúscula
+        </label>
+    </div>
+    <div class="container">
+        <!-- Caixa para texto de entrada -->
+        <div class="box">
+            <h2>Texto de entrada</h2>
+            <div class="textarea-wrapper">
+                <textarea id="texto" placeholder="Digite seu texto aqui..."></textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="importarTexto()">Importar do arquivo</button>
+                <button onclick="salvarTexto('entrada')">Salvar como...</button>
+            </div>
+        </div>
+        <!-- Caixa para texto transformado -->
+        <div class="box">
+            <h2>Texto transformado</h2>
+            <div class="textarea-wrapper">
+                <div id="resultado" class="output"></div>
+            </div>
+            <div class="buttons">
+                <button onclick="copiarTexto()">Copiar para área de transferência</button>
+                <button onclick="salvarTexto('resultado')">Salvar como...</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        function showToast(message) {
+            const toastContainer = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = "toast";
+            toast.innerText = message;
+            toastContainer.appendChild(toast);
+
+            // Remove o toast após a animação
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function capitalizeText(text) {
+            return text
+                .split('\n') // Divide o texto em linhas separadas
+                .map(line =>
+                    line
+                        .replace(/^[•\d+\-\.]\s*/g, '') // Remove indicadores de bola, numerários ou traços no início da linha
+                        .toLowerCase() // Converte tudo para minúsculas
+                        .replace(/(?:^|\.\s*|\?\s*|\!\s*|\n\s*)([a-z])/g, (match, letter) => letter.toUpperCase()) // Capitaliza a primeira letra de cada frase
+                )
+                .join('\n'); // Junta as linhas de volta com quebras de linha
+        }
+
+        function converterTexto() {
+            const texto = document.getElementById("texto").value;
+            const capitalizeOption = document.getElementById("capitalizeOption").checked;
+
+            if (capitalizeOption) {
+                // Capitaliza a primeira letra de cada frase
+                document.getElementById("resultado").innerText = capitalizeText(texto);
+            } else {
+                // Remove indicadores de bola, numerários ou traços no início de cada linha
+                const textoSemIndicadores = texto
+                    .split('\n') // Divide o texto em linhas separadas
+                    .map(line =>
+                        line.replace(/^[•\d+\-\.]\s*/g, '') // Remove indicadores de bola, numerários ou traços no início da linha
+                    )
+                    .join('\n'); // Junta as linhas de volta com quebras de linha
+
+                // Converte o texto para minúsculas e exibe
+                document.getElementById("resultado").innerText = textoSemIndicadores.toLowerCase();
+            }
+        }
+
+        function copiarTexto() {
+            const textoTransformado = document.getElementById("resultado").innerText;
+            if (textoTransformado) {
+                navigator.clipboard.writeText(textoTransformado)
+                    .then(() => showToast("Texto copiado com sucesso!"))
+                    .catch(err => showToast("Erro ao copiar o texto: " + err));
+            } else {
+                showToast("Não há texto para copiar!");
+            }
+        }
+
+        function salvarTexto(tipo) {
+            let texto = "";
+            if (tipo === "entrada") {
+                texto = document.getElementById("texto").value;
+            } else if (tipo === "resultado") {
+                texto = document.getElementById("resultado").innerText;
+            }
+            if (texto) {
+                const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = tipo === "entrada" ? "texto_entrada.txt" : "texto_resultado.txt";
+                link.click();
+                showToast("Texto salvo como arquivo!");
+            } else {
+                showToast("Não há texto para salvar!");
+            }
+        }
+
+        function importarTexto() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".txt";
+            input.onchange = function () {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function () {
+                    document.getElementById("texto").value = reader.result;
+                    converterTexto();
+                    showToast("Texto importado com sucesso!");
+                };
+                if (file) {
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Atualiza o resultado automaticamente ao digitar no campo
+        document.getElementById("texto").addEventListener("input", converterTexto);
+    </script>
+</body>
+
+</html>
